@@ -4,11 +4,11 @@
             [mvssw.datastore :as datastore]))
 
 
-(defrecord HttpServer [config server]
+(defrecord HttpServer [config server datastore]
   component/Lifecycle
   (start [component]
     (println "Starting HTTP Server")
-    (let [stop-fn (server/start config)]
+    (let [stop-fn (server/start config datastore)]
       (println "  - HTTP Server started on port " (:port config))
       (assoc component :server {:stop-fn stop-fn})))
   (stop [component]
@@ -22,14 +22,14 @@
   (map->HttpServer {:config config}))
 
 
-(defrecord Datastore [connection-string schema connection]
+(defrecord Datastore [connection-string connection]
   component/Lifecycle
   (start [component]
     (println "Starting Datastore")
     (datastore/create connection-string)
     (let [connection (datastore/connect connection-string)]
       (println "  - Connected")
-      (datastore/ensure-schema connection schema)
+      (datastore/ensure-schema connection)
       (println "  - Created schema")
       (assoc component :connection connection)))
   (stop [component]
@@ -39,8 +39,8 @@
     (dissoc component :connection)
     ))
 
-(defn datastore [connection-string schema]
-  (map->Datastore {:connection-string connection-string :schema schema}))
+(defn datastore [connection-string]
+  (map->Datastore {:connection-string connection-string}))
 
 
 (defrecord App [config datastore http-server]
@@ -52,9 +52,9 @@
 
 (defn mvssw-app [config]
   (-> (map->App {:config config
-                 :datastore (datastore (:connection-string config) {})
+                 :datastore (datastore (:connection-string config))
                  :http-server (http-server config)})
-      (component/using [:datastore :http-server])))
+      (component/system-using {:http-server [:datastore]})))
 
 
 

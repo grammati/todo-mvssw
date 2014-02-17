@@ -5,7 +5,9 @@
                  [ring/ring-core "1.2.1"]
                  [compojure "1.1.6"]
                  [com.datomic/datomic-free "0.9.4556"]
-                 [com.stuartsierra/component "0.2.1"]]
+                 [com.stuartsierra/component "0.2.1"]
+                 [ring/ring-json "0.2.0"]
+                 [crypto-password "0.1.1"]]
 
   :profiles
   {:dev {:jvm-opts ["-Dmvssw.datomic.connection-string"]
